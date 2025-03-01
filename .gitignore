@@ -1,27 +1,45 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Node modules
+node_modules/
+.next/
+out/
 
-# dependencies
-/node_modules
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# debug
+# Logs and debug files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+*.log
 
-# env files
-.env*
+# Build artifacts
+dist/
+.cache/
 
-# vercel
-.vercel
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
 
-# typescript
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Tailwind cache
+.tailwind/
+
+# TypeScript build files
 *.tsbuildinfo
-next-env.d.ts
+
+# Misc
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
