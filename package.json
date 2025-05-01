@@ -61,8 +61,7 @@
     "better-sqlite3": "latest",
     "fs": "latest",
     "path": "latest",
-    "readline": "latest",
-    "@supabase/supabase-js": "latest"
+    "readline": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

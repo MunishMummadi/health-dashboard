@@ -1,6 +1,6 @@
 "use server"
 
-import { supabaseAdmin, getCachedQueryResult, cacheQueryResult } from "@/lib/supabase"
+// Removed imports from '@/lib/supabase' and '@/lib/data-import'
 
 export interface PatientRecord {
   id: number
@@ -61,10 +61,10 @@ export async function getPatients(page = 1, limit = 100): Promise<PatientRecord[
 // Get total patient count with caching
 export async function getTotalPatientCount(): Promise<number> {
   // Check cache first
-  const cachedResult = await getCachedQueryResult("total_patient_count")
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult("total_patient_count")
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { count, error } = await supabaseAdmin.from("patients").select("*", { count: "exact", head: true })
@@ -72,7 +72,7 @@ export async function getTotalPatientCount(): Promise<number> {
     if (error) throw error
 
     // Cache the result
-    await cacheQueryResult("total_patient_count", count)
+    // await cacheQueryResult("total_patient_count", count)
 
     return count || 0
   } catch (error) {
@@ -84,10 +84,10 @@ export async function getTotalPatientCount(): Promise<number> {
 // Get readmission rate with caching
 export async function getReadmissionRate(): Promise<number> {
   // Check cache first
-  const cachedResult = await getCachedQueryResult("readmission_rate")
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult("readmission_rate")
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { data, error } = await supabaseAdmin.rpc("get_readmission_rate")
@@ -104,13 +104,13 @@ export async function getReadmissionRate(): Promise<number> {
       const rate = (readmissions / fallbackData.length) * 100
 
       // Cache the result
-      await cacheQueryResult("readmission_rate", rate)
+      // await cacheQueryResult("readmission_rate", rate)
 
       return rate
     }
 
     // Cache the result
-    await cacheQueryResult("readmission_rate", data)
+    // await cacheQueryResult("readmission_rate", data)
 
     return data || 0
   } catch (error) {
@@ -122,10 +122,10 @@ export async function getReadmissionRate(): Promise<number> {
 // Get condition distribution with caching
 export async function getConditionDistribution(): Promise<{ name: string; value: number; color: string }[]> {
   // Check cache first
-  const cachedResult = await getCachedQueryResult("condition_distribution")
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult("condition_distribution")
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { data, error } = await supabaseAdmin.rpc("get_condition_distribution")
@@ -155,7 +155,7 @@ export async function getConditionDistribution(): Promise<{ name: string; value:
       ]
 
       // Cache the result
-      await cacheQueryResult("condition_distribution", distribution)
+      // await cacheQueryResult("condition_distribution", distribution)
 
       return distribution
     }
@@ -170,7 +170,7 @@ export async function getConditionDistribution(): Promise<{ name: string; value:
     ]
 
     // Cache the result
-    await cacheQueryResult("condition_distribution", distribution)
+    // await cacheQueryResult("condition_distribution", distribution)
 
     return distribution
   } catch (error) {
@@ -183,12 +183,12 @@ export async function getConditionDistribution(): Promise<{ name: string; value:
 export async function getDemographicDistribution(
   type: "gender" | "race" | "ethnicity",
 ): Promise<{ name: string; value: number; color: string }[]> {
+  const cacheKey = `${type}_distribution`
   // Check cache first
-  const cacheKey = `demographic_distribution_${type}`
-  const cachedResult = await getCachedQueryResult(cacheKey)
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult(cacheKey)
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { data, error } = await supabaseAdmin.from("patients").select(type).order(type)
@@ -227,7 +227,7 @@ export async function getDemographicDistribution(
     }))
 
     // Cache the result
-    await cacheQueryResult(cacheKey, distribution)
+    // await cacheQueryResult(cacheKey, distribution)
 
     return distribution
   } catch (error) {
@@ -241,10 +241,10 @@ export async function getLengthOfStayDistribution(): Promise<
   { month: string; values: { value: number; color: string }[] }[]
 > {
   // Check cache first
-  const cachedResult = await getCachedQueryResult("length_of_stay_distribution")
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult("length_of_stay_distribution")
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { data, error } = await supabaseAdmin.from("patients").select("length_of_stay")
@@ -273,7 +273,7 @@ export async function getLengthOfStayDistribution(): Promise<
     }))
 
     // Cache the result
-    await cacheQueryResult("length_of_stay_distribution", distribution)
+    // await cacheQueryResult("length_of_stay_distribution", distribution)
 
     return distribution
   } catch (error) {
@@ -285,10 +285,10 @@ export async function getLengthOfStayDistribution(): Promise<
 // Get average metrics with caching
 export async function getAverageMetrics(): Promise<{ avgAge: number; avgConditions: string; avgLengthOfStay: string }> {
   // Check cache first
-  const cachedResult = await getCachedQueryResult("average_metrics")
-  if (cachedResult !== null) {
-    return cachedResult
-  }
+  // const cachedResult = await getCachedQueryResult("average_metrics")
+  // if (cachedResult !== null) {
+  //   return cachedResult
+  // }
 
   try {
     const { data, error } = await supabaseAdmin.from("patients").select(`
@@ -316,7 +316,7 @@ export async function getAverageMetrics(): Promise<{ avgAge: number; avgConditio
     }
 
     // Cache the result
-    await cacheQueryResult("average_metrics", metrics)
+    // await cacheQueryResult("average_metrics", metrics)
 
     return metrics
   } catch (error) {
@@ -328,11 +328,10 @@ export async function getAverageMetrics(): Promise<{ avgAge: number; avgConditio
 // Import data from Supabase Storage
 export async function importData(bucketName: string, filePath: string) {
   try {
-    const { importDataFromStorage } = await import("@/lib/data-import")
-    return await importDataFromStorage(bucketName, filePath)
+    // Removed import from '@/lib/data-import'
+    return { success: false, message: "Import functionality disabled." } // Return dummy response
   } catch (error) {
     console.error("Error importing data:", error)
     return { success: false, message: `Error: ${error.message}` }
   }
 }
-
