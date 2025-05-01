@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { AnalyticsCard } from "@/components/analytics-card"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { SearchBar } from "@/components/search-bar"
-import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, BarChart2, CalendarIcon, Activity, Heart } from "lucide-react"
 import { LoadingSpinner } from "@/components/loading-spinner"
@@ -133,116 +132,109 @@ export default function AnalyticsPage() {
   const heartDiseasePercentage = totalPatients > 0 ? ((heartDiseaseCount / totalPatients) * 100).toFixed(1) : "0"
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <header className="p-4 flex items-center justify-between bg-white border-b shadow-sm">
-          <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Analytics" }]} />
-          <div className="w-80">
-            <SearchBar />
-          </div>
-        </header>
+    <>
+      {/* Header - Consider moving to layout if needed globally */}
+      <header className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 flex h-16 items-center justify-between border-b bg-white/80 px-6 backdrop-blur-sm">
+        <Breadcrumb items={[{ label: "Analytics", href: "/analytics" }]} />
+        <SearchBar />
+      </header>
 
-        <main className="p-6">
-          <h1 className="text-xl font-semibold mb-6">Healthcare Analytics</h1>
+      <h1 className="text-xl font-semibold mb-6">Healthcare Analytics</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <AnalyticsCard title="Total Patients" value={totalPatients.toString()} icon={Users} color="#7a40f2" />
-            <AnalyticsCard
-              title="Readmission Rate"
-              value={`${safeReadmissionRate.toFixed(1)}%`}
-              icon={BarChart2}
-              color="#3fbdf1"
-            />
-            <AnalyticsCard
-              title="Average Age"
-              value={(averageMetrics.avgAge || 0).toString()}
-              icon={CalendarIcon}
-              color="#71ddb1"
-            />
-            <AnalyticsCard
-              title="Avg. Length of Stay"
-              value={`${averageMetrics.avgLengthOfStay || "0"} hrs`}
-              icon={Activity}
-              color="#f80d38"
-            />
-            <AnalyticsCard
-              title="Avg. Conditions"
-              value={averageMetrics.avgConditions || "0"}
-              icon={Heart}
-              color="#feca57"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Demographics Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <DonutChart title="Gender Distribution" data={genderDistribution} size={180} />
-                  <DonutChart title="Race Distribution" data={raceDistribution} size={180} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Age Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HorizontalBarChart title="Patients by Age Group" data={ageBarData} />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Medical Conditions by Age</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StackedBarChart
-                  title="Distribution of Conditions Across Age Groups"
-                  data={conditionsByAgeData}
-                  legend={[
-                    { name: "Diabetes", color: "#7a40f2" },
-                    { name: "Hypertension", color: "#71ddb1" },
-                    { name: "Heart Disease", color: "#feca57" },
-                    { name: "COPD", color: "#f80d38" },
-                    { name: "Asthma", color: "#3fbdf1" },
-                    { name: "Cancer", color: "#ff6b6b" },
-                  ]}
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Readmission Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StackedBarChart
-                  title="Readmissions by Medical Condition"
-                  data={readmissionByCondition.map((item) => ({
-                    category: item.condition,
-                    values: [
-                      { name: "Readmitted", value: item.readmitted, color: "#f80d38" },
-                      { name: "Not Readmitted", value: item.notReadmitted, color: "#71ddb1" },
-                    ],
-                  }))}
-                  legend={[
-                    { name: "Readmitted", color: "#f80d38" },
-                    { name: "Not Readmitted", color: "#71ddb1" },
-                  ]}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <AnalyticsCard title="Total Patients" value={totalPatients.toString()} icon={Users} color="#7a40f2" />
+        <AnalyticsCard
+          title="Readmission Rate"
+          value={`${safeReadmissionRate.toFixed(1)}%`}
+          icon={BarChart2}
+          color="#3fbdf1"
+        />
+        <AnalyticsCard
+          title="Average Age"
+          value={(averageMetrics.avgAge || 0).toString()}
+          icon={CalendarIcon}
+          color="#71ddb1"
+        />
+        <AnalyticsCard
+          title="Avg. Length of Stay"
+          value={`${averageMetrics.avgLengthOfStay || "0"} hrs`}
+          icon={Activity}
+          color="#f80d38"
+        />
+        <AnalyticsCard
+          title="Avg. Conditions"
+          value={averageMetrics.avgConditions || "0"}
+          icon={Heart}
+          color="#feca57"
+        />
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Demographics Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DonutChart title="Gender Distribution" data={genderDistribution} size={180} />
+              <DonutChart title="Race Distribution" data={raceDistribution} size={180} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Age Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HorizontalBarChart title="Patients by Age Group" data={ageBarData} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Medical Conditions by Age</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StackedBarChart
+              title="Distribution of Conditions Across Age Groups"
+              data={conditionsByAgeData}
+              legend={[
+                { name: "Diabetes", color: "#7a40f2" },
+                { name: "Hypertension", color: "#71ddb1" },
+                { name: "Heart Disease", color: "#feca57" },
+                { name: "COPD", color: "#f80d38" },
+                { name: "Asthma", color: "#3fbdf1" },
+                { name: "Cancer", color: "#ff6b6b" },
+              ]}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Readmission Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StackedBarChart
+              title="Readmissions by Medical Condition"
+              data={readmissionByCondition.map((item) => ({
+                category: item.condition,
+                values: [
+                  { name: "Readmitted", value: item.readmitted, color: "#f80d38" },
+                  { name: "Not Readmitted", value: item.notReadmitted, color: "#71ddb1" },
+                ],
+              }))}
+              legend={[
+                { name: "Readmitted", color: "#f80d38" },
+                { name: "Not Readmitted", color: "#71ddb1" },
+              ]}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }
-

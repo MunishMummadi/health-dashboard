@@ -6,7 +6,6 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { SearchBar } from "@/components/search-bar"
-import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ChevronLeft, ChevronRight, Filter } from "lucide-react"
@@ -164,137 +163,127 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <header className="p-4 flex items-center justify-between bg-white border-b shadow-sm">
-          <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Reports" }]} />
-          <div className="w-80">
-            <SearchBar />
+    <>
+      {/* Header - Consider moving to layout if needed globally */}
+      <header className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 flex h-16 items-center justify-between border-b bg-white/80 px-6 backdrop-blur-sm">
+        <Breadcrumb items={[{ label: "Reports", href: "/reports" }]} />
+        <SearchBar />
+      </header>
+
+      <h1 className="text-xl font-semibold mb-6">Patient Reports</h1>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Patient List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <div className="w-full md:w-72">
+              <Input placeholder="Search Patient ID, Age, Gender..." value={searchTerm} onChange={handleSearch} />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={filterGender} onValueChange={handleGenderFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterCondition} onValueChange={handleConditionFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Medical Condition" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Conditions</SelectItem>
+                  <SelectItem value="diabetes">Diabetes</SelectItem>
+                  <SelectItem value="hypertension">Hypertension</SelectItem>
+                  <SelectItem value="heartDisease">Heart Disease</SelectItem>
+                  <SelectItem value="copd">COPD</SelectItem>
+                  <SelectItem value="asthma">Asthma</SelectItem>
+                  <SelectItem value="cancer">Cancer</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" onClick={clearFilters} className="gap-2">
+                <Filter size={16} />
+                Clear
+              </Button>
+            </div>
           </div>
-        </header>
 
-        <main className="p-6">
-          <Card className="shadow-sm mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Patient Records</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Search patients..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Select value={filterGender} onValueChange={handleGenderFilter}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Genders</SelectItem>
-                      <SelectItem value="F">Female</SelectItem>
-                      <SelectItem value="M">Male</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={filterCondition} onValueChange={handleConditionFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Medical Condition" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Conditions</SelectItem>
-                      <SelectItem value="diabetes">Diabetes</SelectItem>
-                      <SelectItem value="hypertension">Hypertension</SelectItem>
-                      <SelectItem value="heartDisease">Heart Disease</SelectItem>
-                      <SelectItem value="copd">COPD</SelectItem>
-                      <SelectItem value="asthma">Asthma</SelectItem>
-                      <SelectItem value="cancer">Cancer</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Button variant="outline" onClick={clearFilters} className="gap-2">
-                    <Filter size={16} />
-                    Clear
-                  </Button>
-                </div>
-              </div>
-
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Patient ID</TableHead>
-                      <TableHead>Age</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Length of Stay</TableHead>
-                      <TableHead>Conditions</TableHead>
-                      <TableHead>Readmission</TableHead>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient ID</TableHead>
+                  <TableHead>Age</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Length of Stay</TableHead>
+                  <TableHead>Conditions</TableHead>
+                  <TableHead>Readmission</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell className="font-medium text-primary">#{patient.patientId}</TableCell>
+                      <TableCell>{patient.age}</TableCell>
+                      <TableCell>{patient.gender}</TableCell>
+                      <TableCell>{formatLengthOfStay(patient.lengthOfStay)}</TableCell>
+                      <TableCell>{patient.totalConditions}</TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            patient.isReadmission ? "text-destructive font-medium" : "text-success font-medium"
+                          }
+                        >
+                          {patient.isReadmission ? "Yes" : "No"}
+                        </span>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {patients.length > 0 ? (
-                      patients.map((patient) => (
-                        <TableRow key={patient.id}>
-                          <TableCell className="font-medium text-primary">#{patient.patientId}</TableCell>
-                          <TableCell>{patient.age}</TableCell>
-                          <TableCell>{patient.gender}</TableCell>
-                          <TableCell>{formatLengthOfStay(patient.lengthOfStay)}</TableCell>
-                          <TableCell>{patient.totalConditions}</TableCell>
-                          <TableCell>
-                            <span
-                              className={
-                                patient.isReadmission ? "text-destructive font-medium" : "text-success font-medium"
-                              }
-                            >
-                              {patient.isReadmission ? "Yes" : "No"}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No patients found matching your criteria
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      No patients found matching your criteria
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-500">
-                  Showing {patients.length} of {totalPatients} patients
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={goToPrevPage} disabled={page === 1} className="gap-1">
-                    <ChevronLeft size={16} />
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-3 text-sm">
-                    Page {page} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={page === totalPages}
-                    className="gap-1"
-                  >
-                    Next
-                    <ChevronRight size={16} />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    </div>
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-500">
+              Showing {patients.length} of {totalPatients} patients
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={goToPrevPage} disabled={page === 1} className="gap-1">
+                <ChevronLeft size={16} />
+                Previous
+              </Button>
+              <span className="flex items-center px-3 text-sm">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={page === totalPages}
+                className="gap-1"
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   )
 }
-

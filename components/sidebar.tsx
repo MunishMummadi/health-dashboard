@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, FileText, Home, Activity } from "lucide-react"
+import { BarChart2, FileText, Home, Activity, Cpu } from "lucide-react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -24,6 +24,7 @@ export function Sidebar() {
         <NavItem href="/" icon={<Home size={20} />} label="Home" isActive={isActive("/")} />
         <NavItem href="/analytics" icon={<BarChart2 size={20} />} label="Analytics" isActive={isActive("/analytics")} />
         <NavItem href="/reports" icon={<FileText size={20} />} label="Reports" isActive={isActive("/reports")} />
+        <NavItem href="/model" icon={<Cpu size={20} />} label="Model" isActive={isActive("/model")} />
       </nav>
 
       <div className="p-4 pb-6 text-center text-xs text-gray-500">
@@ -62,4 +63,3 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
     </Link>
   )
 }
-

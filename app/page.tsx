@@ -7,7 +7,6 @@ import { CircularProgress } from "@/components/circular-progress"
 import { PieChart } from "@/components/pie-chart"
 import { DonutChart } from "@/components/donut-chart"
 import { SearchBar } from "@/components/search-bar"
-import { Sidebar } from "@/components/sidebar"
 import { StatCard } from "@/components/stat-card"
 import { BarChart } from "@/components/bar-chart"
 import { LineChart } from "@/components/line-chart"
@@ -55,24 +54,25 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function fetchData() {
+      console.log("Dashboard: Starting data fetch...");
       try {
         const data = await loadPatientData()
-
+        console.log("Dashboard: loadPatientData returned:", data ? `${data.length} records` : "null/undefined");
         // If no data, redirect to setup
         if (!data || data.length === 0) {
+          console.log("Dashboard: No data found, redirecting to /setup");
           router.push("/setup")
           return
         }
-
         setPatientData(data)
       } catch (err) {
-        console.error("Error loading data:", err)
+        console.error("Dashboard: Error loading data:", err)
         setError("Failed to load patient data. Please check your CSV format.")
       } finally {
+        console.log("Dashboard: Setting loading to false.");
         setLoading(false)
       }
     }
-
     fetchData()
   }, [router])
 
@@ -149,123 +149,114 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 overflow-auto bg-gray-50">
-        <header className="p-4 flex items-center justify-between bg-white border-b shadow-sm">
-          <Breadcrumb items={[{ label: "Home" }]} />
-          <div className="w-80">
-            <SearchBar />
-          </div>
-        </header>
+    <>
+      {/* Header */}
+      <header className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 flex h-16 items-center justify-between border-b bg-white/80 px-6 backdrop-blur-sm">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/" }]} />
+        <SearchBar />
+      </header>
 
-        <main className="p-6">
-          <h1 className="text-xl font-semibold mb-6">Patient Analytics Dashboard</h1>
-
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StatCard title="Total Patients" value={totalPatients} />
-            </div>
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StatCard title="Avg. Age" value={averageMetrics.avgAge || 0} />
-            </div>
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StatCard title="Avg. Conditions" value={averageMetrics.avgConditions || "0"} />
-            </div>
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StatCard
-                title="Avg. Stay"
-                value={`${averageMetrics.avgLengthOfStay || "0"} hrs`}
-                trend={{ value: 10, direction: "down" }}
-              />
-            </div>
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StatCard title="Readmission Rate" value={`${safeReadmissionRate.toFixed(1)}%`} />
-            </div>
-          </div>
-
-          {/* Main Dashboard Content */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* First column */}
-            <div className="space-y-6">
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <h3 className="text-sm font-medium mb-4">Readmission Risk</h3>
-                <div className="flex justify-center">
-                  <CircularProgress
-                    percentage={Math.round(safeReadmissionRate)}
-                    color="#7a40f2"
-                    label="Readmission Rate"
-                    trend={{ value: 5, direction: "down" }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <BarChart title="Length of Stay Distribution" data={lengthOfStayData} />
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <HorizontalBarChart title="Age Distribution" data={ageBarData} />
-              </div>
-            </div>
-
-            {/* Second column */}
-            <div className="space-y-6">
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <DonutChart
-                  title="Medical Conditions Distribution"
-                  data={conditionDistribution.filter((item) => item.value > 0)}
-                />
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <LineChart title="Admission Trends" subtitle="Last 5 Months" data={timeSeriesData} />
-              </div>
-            </div>
-
-            {/* Third column */}
-            <div className="space-y-6">
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <PieChart title="Gender Distribution" data={genderDistribution} />
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border shadow-sm">
-                <PieChart title="Race Distribution" data={raceDistribution} />
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StackedBarChart
-                title="Medical Conditions by Age Group"
-                data={conditionsByAgeData}
-                legend={conditionsLegend}
-              />
-            </div>
-
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <StackedBarChart
-                title="Readmissions by Medical Condition"
-                data={readmissionByCondition.map((item) => ({
-                  category: item.condition,
-                  values: [
-                    { name: "Readmitted", value: item.readmitted, color: "#f80d38" },
-                    { name: "Not Readmitted", value: item.notReadmitted, color: "#71ddb1" },
-                  ],
-                }))}
-                legend={[
-                  { name: "Readmitted", color: "#f80d38" },
-                  { name: "Not Readmitted", color: "#71ddb1" },
-                ]}
-              />
-            </div>
-          </div>
-        </main>
+      {/* Key Metrics */}
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StatCard title="Total Patients" value={totalPatients} />
+        </div>
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StatCard title="Avg. Age" value={averageMetrics.avgAge || 0} />
+        </div>
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StatCard title="Avg. Conditions" value={averageMetrics.avgConditions || "0"} />
+        </div>
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StatCard
+            title="Avg. Stay"
+            value={`${averageMetrics.avgLengthOfStay || "0"} hrs`}
+            trend={{ value: 10, direction: "down" }}
+          />
+        </div>
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StatCard title="Readmission Rate" value={`${safeReadmissionRate.toFixed(1)}%`} />
+        </div>
       </div>
-    </div>
+
+      {/* Main Dashboard Content */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* First column */}
+        <div className="space-y-6">
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <h3 className="text-sm font-medium mb-4">Readmission Risk</h3>
+            <div className="flex justify-center">
+              <CircularProgress
+                percentage={Math.round(safeReadmissionRate)}
+                color="#7a40f2"
+                label="Readmission Rate"
+                trend={{ value: 5, direction: "down" }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <BarChart title="Length of Stay Distribution" data={lengthOfStayData} />
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <HorizontalBarChart title="Age Distribution" data={ageBarData} />
+          </div>
+        </div>
+
+        {/* Second column */}
+        <div className="space-y-6">
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <DonutChart
+              title="Medical Conditions Distribution"
+              data={conditionDistribution.filter((item) => item.value > 0)}
+            />
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <LineChart title="Admission Trends" subtitle="Last 5 Months" data={timeSeriesData} />
+          </div>
+        </div>
+
+        {/* Third column */}
+        <div className="space-y-6">
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <PieChart title="Gender Distribution" data={genderDistribution} />
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            <PieChart title="Race Distribution" data={raceDistribution} />
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StackedBarChart
+            title="Medical Conditions by Age Group"
+            data={conditionsByAgeData}
+            legend={conditionsLegend}
+          />
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border shadow-sm">
+          <StackedBarChart
+            title="Readmissions by Medical Condition"
+            data={readmissionByCondition.map((item) => ({
+              category: item.condition,
+              values: [
+                { name: "Readmitted", value: item.readmitted, color: "#f80d38" },
+                { name: "Not Readmitted", value: item.notReadmitted, color: "#71ddb1" },
+              ],
+            }))}
+            legend={[
+              { name: "Readmitted", color: "#f80d38" },
+              { name: "Not Readmitted", color: "#71ddb1" },
+            ]}
+          />
+        </div>
+      </div>
+    </>
   )
 }
-

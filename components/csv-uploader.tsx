@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, CheckCircle, AlertCircle } from "lucide-react"
 
-export function CSVUploader() {
+interface CSVUploaderProps {
+  onUploadSuccess: (csvContent: string) => void;
+}
+
+export function CSVUploader({ onUploadSuccess }: CSVUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
@@ -64,15 +68,15 @@ export function CSVUploader() {
             throw new Error("CSV file must contain required columns: Patient_ID, AGE, IS_READMISSION, etc.")
           }
 
-          // Store in localStorage (limited to ~5MB)
-          localStorage.setItem("patient-data-csv", csvContent)
+          // Call the callback function with the CSV content
+          onUploadSuccess(csvContent);
 
           setUploadSuccess(true)
 
           // Wait a moment before reloading to show success message
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
+          // setTimeout(() => {
+          //   window.location.reload()
+          // }, 1000)
         } catch (error) {
           console.error("Error processing CSV:", error)
           setUploadError(`Failed to process CSV: ${error instanceof Error ? error.message : "Unknown error"}`)
@@ -121,7 +125,7 @@ export function CSVUploader() {
         {uploadSuccess && (
           <div className="flex items-center gap-2 text-success">
             <CheckCircle size={16} />
-            <p className="text-sm">File uploaded successfully! Refreshing page...</p>
+            <p className="text-sm">File processed successfully!</p>
           </div>
         )}
       </CardContent>
@@ -134,4 +138,3 @@ export function CSVUploader() {
     </Card>
   )
 }
-
