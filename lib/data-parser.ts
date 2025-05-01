@@ -74,6 +74,13 @@ export async function loadPatientData(): Promise<PatientRecord[]> {
   }
 }
 
+// Helper function to parse boolean values from CSV strings
+function parseBoolean(value: string | undefined): boolean {
+  if (!value) return false;
+  const upperVal = value.trim().toUpperCase();
+  return upperVal === "TRUE" || upperVal === "1" || upperVal === "YES";
+}
+
 export function parseCSVData(csvText: string): PatientRecord[] {
   // Split the CSV text into lines
   const lines = csvText.split("\n")
@@ -112,13 +119,13 @@ export function parseCSVData(csvText: string): PatientRecord[] {
         totalConditions: isNaN(totalConditions) ? 0 : totalConditions,
         totalMedications: isNaN(totalMedications) ? 0 : totalMedications,
         totalProcedures: isNaN(totalProcedures) ? 0 : totalProcedures,
-        isReadmission: values[6]?.toUpperCase() === "TRUE",
-        hasDiabetes: values[7]?.toUpperCase() === "TRUE",
-        hasHypertension: values[8]?.toUpperCase() === "TRUE",
-        hasHeartDisease: values[9]?.toUpperCase() === "TRUE",
-        hasCopd: values[10]?.toUpperCase() === "TRUE",
-        hasAsthma: values[11]?.toUpperCase() === "TRUE",
-        hasCancer: values[12]?.toUpperCase() === "TRUE",
+        isReadmission: parseBoolean(values[6]), 
+        hasDiabetes: parseBoolean(values[7]), 
+        hasHypertension: parseBoolean(values[8]), 
+        hasHeartDisease: parseBoolean(values[9]), 
+        hasCopd: parseBoolean(values[10]), 
+        hasAsthma: parseBoolean(values[11]), 
+        hasCancer: parseBoolean(values[12]), 
         gender: values[13]?.toUpperCase() === "TRUE" ? "F" : "M",
         race:
           values[15]?.toUpperCase() === "TRUE"
@@ -338,4 +345,3 @@ export function getPatientsByPage(data: PatientRecord[], page: number, pageSize:
 export function getTotalPatients(data: PatientRecord[]): number {
   return data.length
 }
-
