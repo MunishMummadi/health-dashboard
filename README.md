@@ -9,7 +9,6 @@ A web application designed to visualize and analyze healthcare data. This dashbo
 *   **Data Visualization:** Interactive charts and graphs for exploring healthcare datasets.
 *   **AI-Powered Summarization:** Utilizes the Groq API to summarize text data (e.g., patient notes, research papers).
 *   **User-Friendly Interface:** Built with modern web technologies for a seamless user experience.
-*   **(Add more specific features as applicable)**
 
 ## Technology Stack
 
