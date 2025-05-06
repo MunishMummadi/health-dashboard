@@ -6,7 +6,7 @@ export interface PatientRecord {
   totalConditions: number
   totalMedications: number
   totalProcedures: number
-  isReadmission: boolean
+  isReadmission: boolean // Actual readmission status from data
   hasDiabetes: boolean
   hasHypertension: boolean
   hasHeartDisease: boolean
@@ -16,6 +16,8 @@ export interface PatientRecord {
   gender: "F" | "M"
   race: "asian" | "black" | "hawaiian" | "native" | "other" | "white"
   ethnicity: "hispanic" | "nonhispanic"
+  prediction?: number // Predicted readmission (0 or 1), optional
+  predictionProbability?: number // Probability of predicted readmission, optional
 }
 
 // Cache for parsed data to avoid repeated parsing

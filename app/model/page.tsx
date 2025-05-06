@@ -22,11 +22,16 @@ interface ChatMessage {
 
 export default function ModelPage() {
   const [csvData, setCsvData] = useState<string | null>(null); 
+  // Use the updated PatientRecord type which includes optional prediction fields
   const [parsedData, setParsedData] = useState<PatientRecord[] | null>(null); 
   const [parsingError, setParsingError] = useState<string | null>(null); 
   const [summary, setSummary] = useState<string | null>(null); 
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false); 
   const [summarizeError, setSummarizeError] = useState<string | null>(null); 
+
+  // Prediction State
+  const [isPredicting, setIsPredicting] = useState<boolean>(false);
+  const [predictError, setPredictError] = useState<string | null>(null);
 
   // Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -73,6 +78,46 @@ export default function ModelPage() {
       setSummary(null);
     } finally {
       setIsSummarizing(false);
+    }
+  };
+
+  // --- PREDICTION FUNCTIONALITY ---
+  const getPredictions = async (dataToPredict: PatientRecord[]) => {
+    if (!dataToPredict || dataToPredict.length === 0) return;
+
+    setIsPredicting(true);
+    setPredictError(null);
+    console.log("Initiating prediction...");
+
+    try {
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToPredict), 
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Predictions received:", result.data.length);
+      // Update the parsedData state with the data containing predictions
+      setParsedData(result.data);
+      
+      // Optionally, trigger summary generation *after* getting predictions
+      await generateSummary(result.data);
+
+    } catch (error) {
+      console.error("Error getting predictions:", error);
+      const message = error instanceof Error ? error.message : 'An unknown error occurred during prediction.';
+      setPredictError(`Failed to get predictions: ${message}`);
+      setParsedData(dataToPredict); // Revert to data without predictions on error
+    } finally {
+      setIsPredicting(false);
     }
   };
 
@@ -123,7 +168,7 @@ export default function ModelPage() {
   // --- END CHAT FUNCTIONALITY ---
 
 
-  const handleUploadSuccess = (csvContent: string) => {
+  const handleUploadSuccess = async (csvContent: string) => {
     console.log("CSV data received in ModelPage:", csvContent.substring(0, 100) + '...');
     setCsvData(csvContent);
     setParsedData(null); 
@@ -131,23 +176,31 @@ export default function ModelPage() {
     setSummary(null); 
     setSummarizeError(null);
     setIsSummarizing(false);
+    setPredictError(null); // Clear prediction error on new upload
 
     // Reset chat when new CSV is uploaded
     setChatMessages([]);
     setChatError(null);
 
     try {
-      const results = parseCSVData(csvContent);
-      if (results.length === 0) {
-        setParsingError("No valid patient records found in the uploaded CSV. Please check the file format and content.");
-      } else {
-        setParsedData(results);
-        console.log(`Successfully parsed ${results.length} records.`);
-        generateSummary(results);
-      }
+      console.log("Parsing CSV data...");
+      const data = parseCSVData(csvContent);
+      console.log(`Parsed ${data.length} records.`);
+      setParsedData(data); 
+      setCsvData(csvContent); // Store original CSV for download if needed
+
+      // Trigger prediction AFTER successful parsing
+      // generateSummary will be called within getPredictions upon success
+      await getPredictions(data); 
+
+      // // Trigger summary generation using the parsed data
+      // await generateSummary(data);
+
     } catch (error) {
-      console.error("Error parsing CSV data:", error);
-      setParsingError(`Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure the format is correct.`);
+      console.error("Error parsing CSV:", error);
+      const message = error instanceof Error ? error.message : 'An unknown error occurred during parsing.';
+      setParsingError(`Failed to parse CSV: ${message}`);
+      setCsvData(null);
       setParsedData(null);
     }
   };
@@ -155,52 +208,57 @@ export default function ModelPage() {
   const handleDownload = () => {
     if (!parsedData) return;
 
-    const header = [
-      'Patient_ID', 'AGE', 'Length_Of_Stay_DAYS', 'Total_Conditions', 'Total_Medications',
-      'Total_Procedures', 'Is_Readmission', 'Has_Diabetes', 'Has_Hypertension',
-      'Has_Heart_Disease', 'Has_COPD', 'Has_Asthma', 'Has_Cancer',
-      'Gender', 'Race', 'Ethnicity'
+    // Define headers - include prediction columns if they exist
+    const headers = [
+      'PatientID', 'Age', 'LengthOfStay', 'TotalConditions', 
+      'TotalMedications', 'TotalProcedures', 'IsReadmission', 
+      'HasDiabetes', 'HasHypertension', 'HasHeartDisease', 
+      'HasCopd', 'HasAsthma', 'HasCancer', 
+      'Gender', 'Race', 'Ethnicity',
+      // Conditionally add prediction headers
+      ...(parsedData[0]?.prediction !== undefined ? ['Prediction'] : []),
+      ...(parsedData[0]?.predictionProbability !== undefined ? ['PredictionProbability'] : []),
+    ];
+    
+    const csvRows = [
+      headers.join(','),
+      ...parsedData.map(record => [
+        record.patientId, // Use patientId if available, otherwise id
+        record.age,
+        record.lengthOfStay,
+        record.totalConditions,
+        record.totalMedications,
+        record.totalProcedures,
+        record.isReadmission,
+        record.hasDiabetes,
+        record.hasHypertension,
+        record.hasHeartDisease,
+        record.hasCopd,
+        record.hasAsthma,
+        record.hasCancer,
+        record.gender,
+        record.race,
+        record.ethnicity,
+        // Conditionally add prediction values
+        ...(record.prediction !== undefined ? [record.prediction] : []),
+        ...(record.predictionProbability !== undefined ? [record.predictionProbability.toFixed(4)] : []), // Format probability
+      ].join(','))
     ];
 
-    const rows = parsedData.map(record => [
-      record.patientId,
-      record.age,
-      record.lengthOfStay,
-      record.totalConditions,
-      record.totalMedications,
-      record.totalProcedures,
-      record.isReadmission,
-      record.hasDiabetes,
-      record.hasHypertension,
-      record.hasHeartDisease,
-      record.hasCopd,
-      record.hasAsthma,
-      record.hasCancer,
-      record.gender,
-      record.race,
-      record.ethnicity
-    ].map(value => {
-      const stringValue = String(value);
-      return /[,\"\n]/.test(stringValue) ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
-    }).join(','));
-    
-    const csvContent = [header.join(','), ...rows].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    if (link.download !== undefined) { 
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'processed_patient_data.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } else {
-      alert("CSV download is not supported in this browser.");
-    }
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    // Include prediction status in filename
+    const filename = parsedData[0]?.prediction !== undefined ? 'patient_data_with_predictions.csv' : 'patient_data.csv';
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
 
   return (
     <>
@@ -253,23 +311,36 @@ export default function ModelPage() {
                             <TableRow>
                               <TableHead>Patient ID</TableHead>
                               <TableHead>Age</TableHead>
-                              <TableHead>Gender</TableHead>
-                              <TableHead>Conditions</TableHead>
-                              <TableHead>Readmission</TableHead>
+                              <TableHead>Readmitted</TableHead>
+                              {/* Add Prediction Headers Conditionally */}
+                              {parsedData?.[0]?.prediction !== undefined && (
+                                <TableHead>Prediction</TableHead>
+                              )}
+                              {parsedData?.[0]?.predictionProbability !== undefined && (
+                                <TableHead>Probability</TableHead>
+                              )}
+                              <TableHead>Length of Stay</TableHead>
+                              <TableHead>Total Conditions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {parsedData.slice(0, 5).map((patient) => (
                               <TableRow key={patient.id}>
-                                <TableCell className="font-medium">{patient.patientId}</TableCell>
+                                <TableCell>{patient.patientId ?? patient.id}</TableCell>
                                 <TableCell>{patient.age}</TableCell>
-                                <TableCell>{patient.gender}</TableCell>
+                                <TableCell>{patient.isReadmission ? 'Yes' : 'No'}</TableCell>
+                                {/* Add Prediction Cells Conditionally */}
+                                {patient.prediction !== undefined && (
+                                  <TableCell className={patient.prediction === 1 ? 'font-bold text-orange-600' : ''}>
+                                    {patient.prediction === 1 ? 'Yes' : 'No'}
+                                  </TableCell>
+                                )}
+                                {patient.predictionProbability !== undefined && (
+                                  <TableCell>{patient.predictionProbability.toFixed(3)}</TableCell>
+                                )}
+                                <TableCell>{patient.lengthOfStay.toFixed(2)}</TableCell>
                                 <TableCell>{patient.totalConditions}</TableCell>
-                                <TableCell>
-                                  <span className={patient.isReadmission ? "text-destructive" : "text-success"}>
-                                    {patient.isReadmission ? "Yes" : "No"}
-                                  </span>
-                                </TableCell>
+                                <TableCell>{patient.totalMedications}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -288,9 +359,29 @@ export default function ModelPage() {
           </CardContent>
         </Card>
 
-        {(isSummarizing || summary || summarizeError) && (
-          /* AI Summary Card - apply width constraints */
-          <Card className="w-full max-w-4xl">
+        {/* Prediction Loading/Error Display */} 
+        {isPredicting && (
+          <div className="mt-4 flex items-center justify-center gap-2 text-gray-600">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Generating predictions...</span>
+          </div>
+        )}
+        {predictError && (
+          <Card className="w-full max-w-4xl mt-4 border-destructive bg-red-50">
+             <CardHeader className="flex flex-row items-center space-x-3 pb-2 pt-3">
+                <AlertCircle className="h-6 w-6 text-destructive"/>
+                <CardTitle className="text-lg text-destructive">Prediction Error</CardTitle>
+             </CardHeader>
+             <CardContent className="pb-3">
+                <p className="text-sm text-destructive">{predictError}</p>
+                <p className="text-xs text-gray-500 mt-1">Please check the console or server logs for more details. The model might be missing or there could be an issue with the Python environment.</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Only show Summary card if prediction is done (or wasn't needed/failed) and summarization is complete */} 
+        {summary && !isSummarizing && !isPredicting && (
+          <Card className="w-full max-w-4xl mt-6">
             <CardHeader>
               <CardTitle>AI Data Summary</CardTitle>
               <CardDescription>Generated by Groq</CardDescription>
@@ -325,8 +416,8 @@ export default function ModelPage() {
           </Card>
         )}
         
-        {/* --- CHAT INTERFACE --- */}
-        {summary && !isSummarizing && (
+        {/* Only show Chat if Summary exists and we are not predicting */} 
+        {summary && !isSummarizing && !isPredicting && (
           <Card className="w-full max-w-4xl mt-6">
             <CardHeader>
               <CardTitle>Chat with AI</CardTitle>
