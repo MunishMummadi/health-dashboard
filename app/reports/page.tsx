@@ -167,7 +167,7 @@ export default function ReportsPage() {
       {/* Header - Consider moving to layout if needed globally */}
       <header className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 flex h-16 items-center justify-between border-b bg-white/80 px-6 backdrop-blur-sm">
         <Breadcrumb items={[{ label: "Reports", href: "/reports" }]} />
-        <SearchBar />
+        <SearchBar value={searchTerm} onChange={handleSearch} />
       </header>
 
       <h1 className="text-xl font-semibold mb-6">Patient Reports</h1>
@@ -178,9 +178,6 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-            <div className="w-full md:w-72">
-              <Input placeholder="Search Patient ID, Age, Gender..." value={searchTerm} onChange={handleSearch} />
-            </div>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={filterGender} onValueChange={handleGenderFilter}>
                 <SelectTrigger className="w-[180px]">
