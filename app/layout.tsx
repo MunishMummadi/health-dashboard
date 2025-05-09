@@ -9,7 +9,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Healthcare Analytics Dashboard",
   description: "Healthcare analytics and patient management dashboard",
-  generator: 'v0.dev'
 }
 
 export default function RootLayout({
